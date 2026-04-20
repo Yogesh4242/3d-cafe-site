@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Lenis from 'lenis';
 
 const FRAME_COUNT = 270;
@@ -16,6 +16,9 @@ export default function ZedCafeFramesWheel() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLElement>(null);
+  
+  // State for mobile menu
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const paths = useMemo(() => {
     const getSrc = (frameIndex: number) => {
@@ -32,7 +35,7 @@ export default function ZedCafeFramesWheel() {
     const ctx = canvas.getContext('2d', { alpha: false });
     if (!ctx) return;
 
-    // 1. Initialize Lenis (Buttery smooth scrolling)
+    // 1. Initialize Lenis
     const lenis = new Lenis({
       duration: 1.8,
       smoothWheel: true,
@@ -116,7 +119,7 @@ export default function ZedCafeFramesWheel() {
     });
     ro.observe(canvas);
 
-    // 5. Canvas Drawing Math (Acts like object-fit: cover)
+    // 5. Canvas Drawing Math
     const drawCover = (img: HTMLImageElement) => {
       const cw = canvas.width;
       const ch = canvas.height;
@@ -177,7 +180,7 @@ export default function ZedCafeFramesWheel() {
 
       // Header Background Toggle Logic
       if (headerRef.current) {
-        const pastHero = scrollY > end - 50; // trigger slightly before it completely unpins
+        const pastHero = scrollY > end - 50; 
         if (pastHero) {
           headerRef.current.style.backgroundColor = 'rgba(8, 8, 8, 0.85)';
           headerRef.current.style.backdropFilter = 'blur(16px)';
@@ -213,55 +216,100 @@ export default function ZedCafeFramesWheel() {
     };
   }, [paths]);
 
+  const navItems = ['Menu', 'Story', 'Reserve'];
+
   return (
     <main style={{ position: 'relative', width: '100%', background: '#080808', color: '#fff' }}>
       
-      {/* ── Hero Brand Text (Fixed at top, dynamically styled on scroll) ── */}
+      {/* ── Hero Brand Text ── */}
       <header 
-  ref={headerRef} 
-  style={{
-    position: 'fixed', top: 0, left: 0, right: 0,
-    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-    padding: '28px 48px', zIndex: 50, 
-    transition: 'background-color 0.4s ease, backdrop-filter 0.4s ease, border-color 0.4s ease',
-    borderBottom: '1px solid transparent'
-  }}
->
-  <div>
-    <p style={{
-      fontSize: 11, letterSpacing: '0.25em', textTransform: 'uppercase',
-      color: 'rgba(255,255,255,0.45)', fontWeight: 500, marginBottom: '4px'
-    }}>Est. 2019</p>
-    <h1 style={{
-      fontSize: 22, fontWeight: 800, color: '#fff', letterSpacing: '-0.02em',
-      fontFamily: '"Playfair Display", Georgia, serif', margin: 0
-    }}>ZED CAFÉ</h1>
-  </div>
-  <nav className="hero-nav" style={{ display: 'flex', gap: 32 }}>
-    {['Menu', 'Story', 'Reserve'].map(item => (
-      <a 
-        key={item} 
-        href={`#${item.toLowerCase()}`}
-        onClick={(e) => {
-          e.preventDefault();
-          const target = document.getElementById(item.toLowerCase());
-          if (target) {
-            target.scrollIntoView({ behavior: 'smooth' });
-          }
-        }}
-        style={{
-          fontSize: 13, color: 'rgba(255,255,255,0.55)', letterSpacing: '0.05em',
-          fontWeight: 500, cursor: 'pointer', pointerEvents: 'auto', transition: 'color 0.2s',
-          textDecoration: 'none'
-        }}
-        onMouseOver={(e) => e.currentTarget.style.color = '#fff'}
-        onMouseOut={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.55)'}
+        ref={headerRef} 
+        className="fixed top-0 left-0 right-0 flex justify-between items-center z-50 px-6 py-5 md:px-12 md:py-7 transition-all duration-400"
+        style={{ borderBottom: '1px solid transparent' }}
       >
-        {item}
-      </a>
-    ))}
-  </nav>
-</header>
+        <div className="relative z-50">
+          <p style={{
+            fontSize: 11, letterSpacing: '0.25em', textTransform: 'uppercase',
+            color: 'rgba(255,255,255,0.45)', fontWeight: 500, marginBottom: '4px'
+          }}>Est. 2019</p>
+          <h1 style={{
+            fontSize: 22, fontWeight: 800, color: '#fff', letterSpacing: '-0.02em',
+            fontFamily: '"Playfair Display", Georgia, serif', margin: 0
+          }}>ZED CAFÉ</h1>
+        </div>
+
+        {/* Desktop Nav */}
+        <nav className="hidden md:flex gap-8 relative z-50">
+          {navItems.map(item => (
+            <a 
+              key={item} 
+              href={`#${item.toLowerCase()}`}
+              onClick={(e) => {
+                e.preventDefault();
+                const target = document.getElementById(item.toLowerCase());
+                if (target) {
+                  target.scrollIntoView({ behavior: 'smooth' });
+                }
+              }}
+              style={{
+                fontSize: 13, color: 'rgba(255,255,255,0.55)', letterSpacing: '0.05em',
+                fontWeight: 500, cursor: 'pointer', pointerEvents: 'auto', transition: 'color 0.2s',
+                textDecoration: 'none'
+              }}
+              onMouseOver={(e) => e.currentTarget.style.color = '#fff'}
+              onMouseOut={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.55)'}
+            >
+              {item}
+            </a>
+          ))}
+        </nav>
+
+        {/* Mobile Hamburger Button */}
+        <button 
+          className="md:hidden flex flex-col justify-center items-center gap-1.5 w-8 h-8 relative z-50"
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          aria-label="Toggle Menu"
+        >
+          <span className={`h-[2px] w-6 bg-white transition-all duration-300 ${isMobileMenuOpen ? 'rotate-45 translate-y-[8px]' : ''}`} />
+          <span className={`h-[2px] w-6 bg-white transition-all duration-300 ${isMobileMenuOpen ? 'opacity-0' : 'opacity-100'}`} />
+          <span className={`h-[2px] w-6 bg-white transition-all duration-300 ${isMobileMenuOpen ? '-rotate-45 -translate-y-[8px]' : ''}`} />
+        </button>
+      </header>
+
+      {/* Mobile Menu Overlay */}
+      <div 
+        className={`fixed inset-0 bg-[#080808]/95 backdrop-blur-md z-40 flex flex-col items-center justify-center transition-opacity duration-500 md:hidden ${
+          isMobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}
+      >
+        <nav className="flex flex-col items-center gap-10">
+          {navItems.map((item, i) => (
+            <a
+              key={item}
+              href={`#${item.toLowerCase()}`}
+              onClick={(e) => {
+                e.preventDefault();
+                setIsMobileMenuOpen(false);
+                const target = document.getElementById(item.toLowerCase());
+                if (target) {
+                  // Slight delay to allow menu fade out before scrolling
+                  setTimeout(() => target.scrollIntoView({ behavior: 'smooth' }), 300);
+                }
+              }}
+              style={{
+                fontSize: 28, color: '#fff', letterSpacing: '0.1em',
+                fontWeight: 300, textDecoration: 'none',
+                transform: isMobileMenuOpen ? 'translateY(0)' : 'translateY(20px)',
+                opacity: isMobileMenuOpen ? 1 : 0,
+                transition: `all 0.4s ease ${i * 0.1}s`
+              }}
+              className="font-serif uppercase"
+            >
+              {item}
+            </a>
+          ))}
+        </nav>
+      </div>
 
       {/* ══════════════════════════════════════════════════════════════
           HERO — scroll-synced frame animation + menu overlay
@@ -271,22 +319,16 @@ export default function ZedCafeFramesWheel() {
         style={{ position: 'relative', height: '500vh', width: '100%', background: '#080808' }}
       >
         <div style={{ position: 'sticky', top: 0, zIndex: 10, height: '100vh', width: '100%', overflow: 'hidden' }}>
-          
-          {/* Canvas wrapper with parallax */}
           <div ref={wrapRef} style={{ position: 'absolute', inset: 0, willChange: 'transform' }}>
             <canvas
               ref={canvasRef}
               style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', display: 'block' }}
             />
-
-            {/* Vignette gradient */}
             <div style={{
               position: 'absolute', inset: 0,
               background: 'linear-gradient(to bottom, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.22) 60%, rgba(0,0,0,0.88) 100%)',
               pointerEvents: 'none',
             }} />
-            
-            {/* Radial light bloom */}
             <div style={{
               position: 'absolute', inset: 0,
               background: 'radial-gradient(55% 55% at 50% 42%, rgba(255,255,255,0.07), transparent 65%)',
@@ -307,7 +349,6 @@ export default function ZedCafeFramesWheel() {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
-            {/* Highlight 1 */}
             <div className="flex flex-col items-center group">
               <div className="w-24 h-24 rounded-full border border-white/10 flex items-center justify-center mb-6 transition duration-500 group-hover:border-white/40 group-hover:bg-white/5">
                 <svg className="w-8 h-8 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg>
@@ -318,7 +359,6 @@ export default function ZedCafeFramesWheel() {
               </p>
             </div>
 
-            {/* Highlight 2 */}
             <div className="flex flex-col items-center group">
               <div className="w-24 h-24 rounded-full border border-white/10 flex items-center justify-center mb-6 transition duration-500 group-hover:border-white/40 group-hover:bg-white/5">
                 <svg className="w-8 h-8 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
@@ -329,7 +369,6 @@ export default function ZedCafeFramesWheel() {
               </p>
             </div>
 
-            {/* Highlight 3 */}
             <div className="flex flex-col items-center group">
               <div className="w-24 h-24 rounded-full border border-white/10 flex items-center justify-center mb-6 transition duration-500 group-hover:border-white/40 group-hover:bg-white/5">
                 <svg className="w-8 h-8 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 15.546c-.523 0-1.046.151-1.5.454a2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.701 2.701 0 00-1.5-.454M9 6v2m3-2v2m3-2v2M9 3h.01M12 3h.01M15 3h.01M21 21v-7a2 2 0 00-2-2H5a2 2 0 00-2 2v7h18zm-3-9v-2a2 2 0 00-2-2H8a2 2 0 00-2 2v2h12z" /></svg>
@@ -346,8 +385,8 @@ export default function ZedCafeFramesWheel() {
       {/* ══════════════════════════════════════════════════════════════
           SECTION 3: MENU
       ══════════════════════════════════════════════════════════════ */}
-        <section id="menu" className="relative w-full py-32 px-6 lg:px-12 z-20" style={{ background: '#0a0a0a' }}>
-          <div className="max-w-4xl mx-auto">
+      <section id="menu" className="relative w-full py-32 px-6 lg:px-12 z-20" style={{ background: '#0a0a0a' }}>
+        <div className="max-w-4xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4 font-serif tracking-tight text-white">Curated Menu</h2>
             <p className="text-white/40 text-sm tracking-widest uppercase">Classics & Signatures</p>
